@@ -1,6 +1,6 @@
 ---
 name: codex-cli-yolo-task
-description: Use when the user explicitly requests a programming task to run in a separate Codex CLI process with YOLO mode in a named project folder, with the prompt, log, and result saved as files.
+description: Use when a user explicitly requests a YOLO-mode Codex CLI run in a named project folder and wants the prompt, log, and result saved.
 ---
 
 # Run a task through Codex CLI in YOLO mode
