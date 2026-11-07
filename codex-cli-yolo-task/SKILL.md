@@ -14,7 +14,9 @@ YOLO mode disables the sandbox and approval prompts. The `--cd` option sets Code
 1. Use only the project folder the user named. Verify that it exists and is a directory. Do not infer it from the current working directory. Create it only if the user explicitly asks to start a new project or create that folder.
 2. Check the installed CLI's supported flags with `codex exec --help`. Prefer `--yolo`. If the CLI lacks that flag but supports `--dangerously-bypass-approvals-and-sandbox`, use that full flag. If neither is available, stop and report the incompatibility; do not substitute another mode.
 3. Keep the CLI's default model and configuration. Do not pass `-m` or `--model`, set a model through `-c`, or change profiles.
-4. Prepare the prompt from the user's task. Remove only instructions addressed to this assistant about choosing or launching the skill/tool (for example, “run this through Codex CLI”). Preserve the requested work, paths, constraints, and preferences. Do not expand it into a detailed specification or add requirements.
+4. Prepare the prompt directly from the user's task. Remove only instructions addressed to this assistant about choosing or launching the skill/tool (for example, “run this through Codex CLI”). Preserve the requested work, paths, constraints, and preferences. Do not expand it into a detailed specification or add requirements.
+
+   Do not inspect the project, search its files, or do external research to enrich or reinterpret the task before launching Codex CLI. Do not add research findings, inferred file locations, diagnoses, implementation ideas, or acceptance criteria to the prompt. Keep the prompt to the user's request and details the user supplied; repository investigation is for Codex CLI to do after launch. If the request is ambiguous, preserve it as written rather than researching assumptions into it; ask the user only if the ambiguity prevents carrying out the requested task safely.
 
 ## Run and save the artifacts
 
