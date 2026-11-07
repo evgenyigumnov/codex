@@ -1,0 +1,56 @@
+---
+name: codex-cli-yolo-task
+description: Use when the user explicitly requests a programming task to run in a separate Codex CLI process with YOLO mode in a named project folder, with the prompt, log, and result saved as files.
+---
+
+# Run a task through Codex CLI in YOLO mode
+
+Use this skill only when the user explicitly asks for a separate Codex CLI run in YOLO mode, or otherwise clearly authorizes disabling the sandbox and approval prompts for this task. The user must identify the project folder. If either point is unclear, ask before launching Codex CLI.
+
+YOLO mode disables the sandbox and approval prompts. The `--cd` option sets Codex CLI's working directory; it does **not** restrict file access to that directory. Do not describe the project folder as a security boundary.
+
+## Before launching
+
+1. Use only the project folder the user named. Verify that it exists and is a directory. Do not infer it from the current working directory. Create it only if the user explicitly asks to start a new project or create that folder.
+2. Check the installed CLI's supported flags with `codex exec --help`. Prefer `--yolo`. If the CLI lacks that flag but supports `--dangerously-bypass-approvals-and-sandbox`, use that full flag. If neither is available, stop and report the incompatibility; do not substitute another mode.
+3. Keep the CLI's default model and configuration. Do not pass `-m` or `--model`, set a model through `-c`, or change profiles.
+4. Prepare the prompt from the user's task. Remove only instructions addressed to this assistant about choosing or launching the skill/tool (for example, “run this through Codex CLI”). Preserve the requested work, paths, constraints, and preferences. Do not expand it into a detailed specification or add requirements.
+
+## Run and save the artifacts
+
+Save the prompt, JSONL execution log, and final response together in `codex-prompt-log-result` under the current working directory. If the user specifies another artifact directory, use it. Put a timestamp (`YYYYMMDD-HHMMSS`) in each filename and do not create a subdirectory for each run.
+
+Use `--json` for the event log and `--output-last-message` (or `-o`) for the final response file. Redirect both stdout and stderr to the log. Pass the prepared prompt to Codex CLI on stdin.
+
+```bash
+PROJECT_DIR="/absolute/path/to/the/project"
+RUN_STAMP="$(date +%Y%m%d-%H%M%S)"
+RUN_DIR="$PWD/codex-prompt-log-result"
+PROMPT_FILE="$RUN_DIR/prompt-$RUN_STAMP.md"
+LOG_FILE="$RUN_DIR/execution-$RUN_STAMP.jsonl"
+RESULT_FILE="$RUN_DIR/result-$RUN_STAMP.md"
+mkdir -p "$RUN_DIR"
+
+cat > "$PROMPT_FILE" <<'PROMPT'
+<the user's task with only tool-selection instructions removed>
+PROMPT
+
+if codex exec --yolo \
+  --cd "$PROJECT_DIR" \
+  --json \
+  --output-last-message "$RESULT_FILE" \
+  - < "$PROMPT_FILE" \
+  > "$LOG_FILE" 2>&1; then
+  CLI_EXIT=0
+else
+  CLI_EXIT=$?
+fi
+```
+
+If `codex exec --help` showed only `--dangerously-bypass-approvals-and-sandbox`, use that full option in place of `--yolo`.
+
+After the process exits, record its exit code and artifact paths. Do not open, read, analyze, quote, or summarize the execution log. If the result file exists, read it and return its contents to the user, including when the CLI exits unsuccessfully. If it does not exist, report that fact without inspecting the log.
+
+Do not delete prompts, logs, or results automatically. If the user asks to remove old runs, delete only this skill's artifacts in `codex-prompt-log-result`; clarify the date range if “old” is ambiguous.
+
+Do not run tests or other checks through the CLI unless the user requested them. In the final response, report only actions and checks that actually occurred. Include the project path, `CLI_EXIT`, all artifact paths, and the result file's contents (or state that no result file was created).
