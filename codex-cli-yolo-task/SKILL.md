@@ -20,17 +20,20 @@ YOLO mode disables the sandbox and approval prompts. The `--cd` option sets Code
 
 ## Run and save the artifacts
 
-Save the prompt, JSONL execution log, and final response together in `codex-prompt-log-result` under the current working directory. If the user specifies another artifact directory, use it. Put a timestamp (`YYYYMMDD-HHMMSS`) in each filename and do not create a subdirectory for each run.
+Save each run's prompt, JSONL execution log, and final response under `codex-prompt-log-result/<repository-name>/<run-folder>` in the current working directory. If the user specifies another artifact directory, use it as the root instead. Use the basename of the user-named project folder as `<repository-name>`. Name `<run-folder>` with the timestamp format `YYYY-MM-DD-HH_MM_SS` followed by a short, lowercase, hyphen-separated description of the task, such as `2020-01-02-17_33_55-add-task-new`. Keep dates out of the artifact filenames: use `prompt.md`, `execution.jsonl`, and `result.md`.
 
 Use `--json` for the event log and `--output-last-message` (or `-o`) for the final response file. Redirect both stdout and stderr to the log. Pass the prepared prompt to Codex CLI on stdin.
 
 ```bash
 PROJECT_DIR="/absolute/path/to/the/project"
-RUN_STAMP="$(date +%Y%m%d-%H%M%S)"
-RUN_DIR="$PWD/codex-prompt-log-result"
-PROMPT_FILE="$RUN_DIR/prompt-$RUN_STAMP.md"
-LOG_FILE="$RUN_DIR/execution-$RUN_STAMP.jsonl"
-RESULT_FILE="$RUN_DIR/result-$RUN_STAMP.md"
+REPO_NAME="$(basename -- "$PROJECT_DIR")"
+RUN_STAMP="$(date +%Y-%m-%d-%H_%M_%S)"
+# Use a short English slug that describes the user's task.
+TASK_SLUG="add-task-new"
+RUN_DIR="$PWD/codex-prompt-log-result/$REPO_NAME/$RUN_STAMP-$TASK_SLUG"
+PROMPT_FILE="$RUN_DIR/prompt.md"
+LOG_FILE="$RUN_DIR/execution.jsonl"
+RESULT_FILE="$RUN_DIR/result.md"
 mkdir -p "$RUN_DIR"
 
 cat > "$PROMPT_FILE" <<'PROMPT'
